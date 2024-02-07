@@ -5,7 +5,7 @@ struct Book {
 struct Author {
     first_name: String,
     last_name: String,
-    books: Vec<Book>
+    books: Vec<Book>,
 }
 
 pub fn example() {
@@ -18,7 +18,7 @@ pub fn example() {
             },
             Book {
                 title: "One Hundred Years of Solitude".to_string(),
-            }
+            },
         ],
     };
 

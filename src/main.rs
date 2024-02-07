@@ -1,5 +1,10 @@
+mod cli;
 mod playground;
 
 fn main() {
-    playground::books::example();
+    let result = cli::run();
+
+    if let Err(cli_error) = result {
+        println!("{}", cli_error.description);
+    }
 }
