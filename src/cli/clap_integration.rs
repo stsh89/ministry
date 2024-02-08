@@ -1,12 +1,10 @@
-use clap::{Arg, Command};
+use clap::{Arg, ArgMatches, Command};
 
-use super::{error::CliError, playground};
+use super::{error::CliError, Cli};
 
-pub fn run() -> Result<super::Command, CliError> {
+pub fn get_command() -> Result<Cli, CliError> {
     let command = command();
-
     let arg_matches = command.get_matches();
-
     let subcommand = arg_matches.subcommand();
 
     let Some((subcommand, arg_matches)) = subcommand else {
@@ -14,40 +12,46 @@ pub fn run() -> Result<super::Command, CliError> {
     };
 
     match subcommand {
-        "playground" => {
-            let subcommand = arg_matches.subcommand();
+        "playground" => get_playground_command(arg_matches),
+        _ => Err(CliError {
+            description: "Subcommand not found".to_string(),
+        }),
+    }
+}
 
-            let Some((subcommand, arg_matches)) = subcommand else {
-                return Err(CliError { description: "Missing subcommand".to_string() });
-            };
+fn get_playground_command(arg_matches: &ArgMatches) -> Result<Cli, CliError> {
+    let subcommand = arg_matches.subcommand();
 
-            match subcommand {
-                "list" => Ok(super::Command::PlaygroundListCommand(
-                    playground::ListCommand::new(),
-                )),
-                "run" => {
-                    let name = arg_matches
-                        .get_one::<String>("name")
-                        .map(|name| name.to_string())
-                        .unwrap_or_default();
+    let Some((subcommand, arg_matches)) = subcommand else {
+        return Err(CliError { description: "Missing subcommand".to_string() });
+    };
 
-                    Ok(super::Command::PlaygroundRunCommand(
-                        playground::RunCommand::new(&name)?,
-                    ))
-                }
-                _ => {
-                    return Err(CliError {
-                        description: "Subcommand not found".to_string(),
-                    })
-                }
-            }
-        }
+    let cli = match subcommand {
+        "list" => get_playground_list_command(),
+        "run" => get_playground_run_command(arg_matches)?,
         _ => {
             return Err(CliError {
                 description: "Subcommand not found".to_string(),
             })
         }
-    }
+    };
+
+    Ok(cli)
+}
+
+fn get_playground_list_command() -> Cli {
+    Cli::playground_list_command()
+}
+
+fn get_playground_run_command(arg_matches: &ArgMatches) -> Result<Cli, CliError> {
+    let empty_playground_name = String::new();
+    let name = arg_matches
+        .get_one::<String>("name")
+        .unwrap_or(&empty_playground_name);
+
+    let cli = Cli::playground_run_command(name)?;
+
+    Ok(cli)
 }
 
 fn command() -> clap::Command {
@@ -70,7 +74,6 @@ fn playground_list_command() -> Command {
 
 fn playground_run_command() -> Command {
     let name_arg = Arg::new("name")
-        .long("name")
         .required(true)
         .help("The name of the playground to run");
 
