@@ -1,10 +1,12 @@
 mod cli;
 mod playground;
 
+use cli::Run;
+
 fn main() {
-    let result = cli::run();
+    let result = cli::Cli::run();
 
     if let Err(cli_error) = result {
-        println!("{}", cli_error.description);
+        println!("\n{}\n", cli_error.description);
     }
 }
