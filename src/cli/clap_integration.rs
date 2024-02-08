@@ -13,6 +13,7 @@ pub fn get_command() -> Result<Cli, CliError> {
 
     match subcommand {
         "playground" => get_playground_command(arg_matches),
+        "log_server" => Ok(get_log_server_command()),
         name => Err(CliError::command_not_found(name)),
     }
 }
@@ -33,6 +34,10 @@ fn get_playground_command(arg_matches: &ArgMatches) -> Result<Cli, CliError> {
     Ok(cli)
 }
 
+fn get_log_server_command() -> Cli {
+    Cli::log_server_command()
+}
+
 fn get_playground_list_command() -> Cli {
     Cli::playground_list_command()
 }
@@ -51,7 +56,12 @@ fn get_playground_run_command(arg_matches: &ArgMatches) -> Result<Cli, CliError>
 fn command() -> clap::Command {
     clap::Command::new("ministry")
         .subcommand(playground_command())
+        .subcommand(log_server_command())
         .subcommand_required(true)
+}
+
+pub fn log_server_command() -> Command {
+    Command::new("log_server").about("Start the server to check the incoming request data")
 }
 
 pub fn playground_command() -> Command {

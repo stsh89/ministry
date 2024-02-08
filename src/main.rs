@@ -4,6 +4,7 @@
 //! - Custom playgrounds
 
 mod cli;
+mod log_server;
 mod playground;
 
 fn main() {

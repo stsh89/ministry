@@ -3,7 +3,7 @@
 mod clap_integration;
 mod error;
 
-use crate::playground;
+use crate::{log_server, playground};
 use error::CliError;
 
 pub struct Cli {
@@ -13,6 +13,7 @@ pub struct Cli {
 pub enum CliCommand {
     PlaygroundListCommand,
     PlaygroundRunCommand { name: Playground },
+    LogServer,
 }
 
 pub enum Playground {
@@ -52,6 +53,13 @@ impl Cli {
         match &self.command {
             PlaygroundListCommand => list_playgrounds(),
             PlaygroundRunCommand { name } => run_playground(name),
+            LogServer => log_server(),
+        }
+    }
+
+    fn log_server_command() -> Self {
+        Self {
+            command: CliCommand::LogServer,
         }
     }
 
@@ -87,4 +95,8 @@ fn list_playgrounds() {
     let playgrounds: Vec<String> = vec![BooksPlayground.into()];
 
     println!("{:?}", playgrounds);
+}
+
+fn log_server() {
+    log_server::run()
 }
