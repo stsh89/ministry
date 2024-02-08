@@ -1,10 +1,9 @@
+use super::error::CliError;
 use crate::playground;
 
-use super::error::CliError;
+pub struct ListCommand;
 
-pub struct ListCli;
-
-pub struct RunCli {
+pub struct RunCommand {
     name: Playground,
 }
 
@@ -12,9 +11,9 @@ enum Playground {
     BooksPlayground,
 }
 
-impl ListCli {
+impl ListCommand {
     pub fn new() -> Self {
-        ListCli
+        ListCommand
     }
 
     pub fn run(&self) {
@@ -23,6 +22,22 @@ impl ListCli {
         let playgrounds: Vec<String> = vec![BooksPlayground.into()];
 
         println!("{:?}", playgrounds);
+    }
+}
+
+impl RunCommand {
+    pub fn new(name: &str) -> Result<Self, CliError> {
+        let name = TryInto::<Playground>::try_into(name.to_string())?;
+
+        Ok(RunCommand { name })
+    }
+
+    pub fn run(&self) {
+        use Playground::*;
+
+        match self.name {
+            BooksPlayground => playground::books::example(),
+        }
     }
 }
 
@@ -53,21 +68,5 @@ impl TryFrom<String> for Playground {
         };
 
         Ok(playground)
-    }
-}
-
-impl RunCli {
-    pub fn new(name: &str) -> Result<Self, CliError> {
-        let name = TryInto::<Playground>::try_into(name.to_string())?;
-
-        Ok(RunCli { name })
-    }
-
-    pub fn run(&self) {
-        use Playground::*;
-
-        match self.name {
-            BooksPlayground => playground::books::example(),
-        }
     }
 }

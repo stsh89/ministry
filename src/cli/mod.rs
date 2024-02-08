@@ -4,14 +4,22 @@ mod playground;
 
 use error::CliError;
 
-pub struct Cli;
-
-pub trait Run {
-    fn run() -> Result<(), CliError>;
+pub enum Command {
+    PlaygroundListCommand(playground::ListCommand),
+    PlaygroundRunCommand(playground::RunCommand),
 }
 
-impl Run for Cli {
-    fn run() -> Result<(), CliError> {
-        clap_integration::run()
+impl Command {
+    pub fn run(self) {
+        use Command::*;
+
+        match self {
+            PlaygroundListCommand(cmd) => cmd.run(),
+            PlaygroundRunCommand(cmd) => cmd.run(),
+        }
     }
+}
+
+pub fn get_command() -> Result<Command, CliError> {
+    clap_integration::run()
 }

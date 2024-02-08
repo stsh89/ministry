@@ -2,7 +2,7 @@ use clap::{Arg, Command};
 
 use super::{error::CliError, playground};
 
-pub fn run() -> Result<(), CliError> {
+pub fn run() -> Result<super::Command, CliError> {
     let command = command();
 
     let arg_matches = command.get_matches();
@@ -22,13 +22,18 @@ pub fn run() -> Result<(), CliError> {
             };
 
             match subcommand {
-                "list" => playground::ListCli::new().run(),
+                "list" => Ok(super::Command::PlaygroundListCommand(
+                    playground::ListCommand::new(),
+                )),
                 "run" => {
                     let name = arg_matches
                         .get_one::<String>("name")
                         .map(|name| name.to_string())
                         .unwrap_or_default();
-                    playground::RunCli::new(&name)?.run()
+
+                    Ok(super::Command::PlaygroundRunCommand(
+                        playground::RunCommand::new(&name)?,
+                    ))
                 }
                 _ => {
                     return Err(CliError {
@@ -43,8 +48,6 @@ pub fn run() -> Result<(), CliError> {
             })
         }
     }
-
-    Ok(())
 }
 
 fn command() -> clap::Command {
