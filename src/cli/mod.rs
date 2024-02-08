@@ -1,3 +1,5 @@
+//! # Command line interface
+
 mod clap_integration;
 mod error;
 
@@ -36,11 +38,7 @@ impl TryFrom<String> for Playground {
 
         let playground = match value.as_str() {
             "books" => BooksPlayground,
-            _ => {
-                return Err(CliError {
-                    description: "Playground not found".to_string(),
-                })
-            }
+            name => return Err(CliError::playground_not_found(name)),
         };
 
         Ok(playground)

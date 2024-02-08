@@ -3,18 +3,17 @@ use clap::{Arg, ArgMatches, Command};
 
 pub fn get_command() -> Result<Cli, CliError> {
     let command = command();
+    let command_name = command.get_name().to_string();
     let arg_matches = command.get_matches();
     let subcommand = arg_matches.subcommand();
 
     let Some((subcommand, arg_matches)) = subcommand else {
-        return Err(CliError { description: "Missing subcommand".to_string() });
+        return Err(CliError::missing_subcommand(&command_name));
     };
 
     match subcommand {
         "playground" => get_playground_command(arg_matches),
-        _ => Err(CliError {
-            description: "Subcommand not found".to_string(),
-        }),
+        name => Err(CliError::command_not_found(name)),
     }
 }
 
@@ -22,17 +21,13 @@ fn get_playground_command(arg_matches: &ArgMatches) -> Result<Cli, CliError> {
     let subcommand = arg_matches.subcommand();
 
     let Some((subcommand, arg_matches)) = subcommand else {
-        return Err(CliError { description: "Missing subcommand".to_string() });
+        return Err(CliError::missing_subcommand("playground"));
     };
 
     let cli = match subcommand {
         "list" => get_playground_list_command(),
         "run" => get_playground_run_command(arg_matches)?,
-        _ => {
-            return Err(CliError {
-                description: "Subcommand not found".to_string(),
-            })
-        }
+        name => return Err(CliError::subcommand_not_found("playground", name)),
     };
 
     Ok(cli)
