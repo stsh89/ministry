@@ -6,10 +6,6 @@ mod error;
 use crate::{log_server, playground};
 use error::CliError;
 
-pub struct Cli {
-    command: CliCommand,
-}
-
 pub enum CliCommand {
     PlaygroundListCommand,
     PlaygroundRunCommand { name: Playground },
@@ -46,11 +42,11 @@ impl TryFrom<String> for Playground {
     }
 }
 
-impl Cli {
+impl CliCommand {
     pub fn run(&self) {
         use CliCommand::*;
 
-        match &self.command {
+        match &self {
             PlaygroundListCommand => list_playgrounds(),
             PlaygroundRunCommand { name } => run_playground(name),
             LogServer => log_server(),
@@ -58,26 +54,21 @@ impl Cli {
     }
 
     fn log_server_command() -> Self {
-        Self {
-            command: CliCommand::LogServer,
-        }
+        CliCommand::LogServer
     }
 
     fn playground_list_command() -> Self {
-        Self {
-            command: CliCommand::PlaygroundListCommand,
-        }
+        CliCommand::PlaygroundListCommand
     }
 
     fn playground_run_command(name: &str) -> Result<Self, CliError> {
         let name = name.to_string().try_into()?;
-        let command = CliCommand::PlaygroundRunCommand { name };
 
-        Ok(Self { command })
+        Ok(CliCommand::PlaygroundRunCommand { name })
     }
 }
 
-pub fn get_command() -> Result<Cli, CliError> {
+pub fn get_command() -> Result<CliCommand, CliError> {
     clap_integration::get_command()
 }
 

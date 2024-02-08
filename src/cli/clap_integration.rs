@@ -1,11 +1,11 @@
-use super::{error::CliError, Cli};
+use super::{error::CliError, CliCommand};
 use clap::{Arg, ArgMatches, Command};
 
 const PLAYGROUND_COMMAND: &str = "playground";
 const LOG_SERVER_COMMAND: &str = "log_server";
 const GITHUB_COMMAND: &str = "github";
 
-pub fn get_command() -> Result<Cli, CliError> {
+pub fn get_command() -> Result<CliCommand, CliError> {
     let command = command();
     let command_name = command.get_name().to_string();
     let arg_matches = command.get_matches();
@@ -23,7 +23,7 @@ pub fn get_command() -> Result<Cli, CliError> {
     }
 }
 
-fn get_github_command(arg_matches: &ArgMatches) -> Result<Cli, CliError> {
+fn get_github_command(arg_matches: &ArgMatches) -> Result<CliCommand, CliError> {
     let subcommand = arg_matches.subcommand();
 
     let Some((subcommand, _arg_matches)) = subcommand else {
@@ -39,15 +39,15 @@ fn get_github_command(arg_matches: &ArgMatches) -> Result<Cli, CliError> {
     Ok(cli)
 }
 
-fn get_github_octocat_command() -> Cli {
+fn get_github_octocat_command() -> CliCommand {
     todo!()
 }
 
-fn get_github_zen_command() -> Cli {
+fn get_github_zen_command() -> CliCommand {
     todo!()
 }
 
-fn get_playground_command(arg_matches: &ArgMatches) -> Result<Cli, CliError> {
+fn get_playground_command(arg_matches: &ArgMatches) -> Result<CliCommand, CliError> {
     let subcommand = arg_matches.subcommand();
 
     let Some((subcommand, arg_matches)) = subcommand else {
@@ -63,21 +63,21 @@ fn get_playground_command(arg_matches: &ArgMatches) -> Result<Cli, CliError> {
     Ok(cli)
 }
 
-fn get_log_server_command() -> Cli {
-    Cli::log_server_command()
+fn get_log_server_command() -> CliCommand {
+    CliCommand::log_server_command()
 }
 
-fn get_playground_list_command() -> Cli {
-    Cli::playground_list_command()
+fn get_playground_list_command() -> CliCommand {
+    CliCommand::playground_list_command()
 }
 
-fn get_playground_run_command(arg_matches: &ArgMatches) -> Result<Cli, CliError> {
+fn get_playground_run_command(arg_matches: &ArgMatches) -> Result<CliCommand, CliError> {
     let empty_playground_name = String::new();
     let name = arg_matches
         .get_one::<String>("name")
         .unwrap_or(&empty_playground_name);
 
-    let cli = Cli::playground_run_command(name)?;
+    let cli = CliCommand::playground_run_command(name)?;
 
     Ok(cli)
 }
