@@ -1,9 +1,8 @@
 mod clap_integration;
 mod error;
 
-use error::CliError;
-
 use crate::playground;
+use error::CliError;
 
 pub struct Cli {
     command: CliCommand,

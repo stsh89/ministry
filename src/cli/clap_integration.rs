@@ -1,6 +1,5 @@
-use clap::{Arg, ArgMatches, Command};
-
 use super::{error::CliError, Cli};
+use clap::{Arg, ArgMatches, Command};
 
 pub fn get_command() -> Result<Cli, CliError> {
     let command = command();
