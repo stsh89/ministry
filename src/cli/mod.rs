@@ -3,13 +3,14 @@
 mod clap_integration;
 mod error;
 
-use crate::{log_server, playground};
+use crate::{github, log_server, playground};
 use error::CliError;
 
 pub enum CliCommand {
     PlaygroundListCommand,
     PlaygroundRunCommand { name: Playground },
     LogServer,
+    GithubZenCommand,
 }
 
 pub enum Playground {
@@ -50,6 +51,7 @@ impl CliCommand {
             PlaygroundListCommand => list_playgrounds(),
             PlaygroundRunCommand { name } => run_playground(name),
             LogServer => log_server(),
+            GithubZenCommand => todo!("fix async issues"),
         }
     }
 
@@ -65,6 +67,10 @@ impl CliCommand {
         let name = name.to_string().try_into()?;
 
         Ok(CliCommand::PlaygroundRunCommand { name })
+    }
+
+    fn github_zen_command() -> Self {
+        CliCommand::GithubZenCommand
     }
 }
 
@@ -90,4 +96,12 @@ fn list_playgrounds() {
 
 fn log_server() {
     log_server::run()
+}
+
+async fn fetch_github_zen() {
+    let result = github::zen::fetch().await;
+
+    if let Err(github_error) = result {
+        println!("{}", github_error.description);
+    }
 }

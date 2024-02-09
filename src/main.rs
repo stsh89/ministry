@@ -4,10 +4,12 @@
 //! - Custom playgrounds
 
 mod cli;
+mod github;
 mod log_server;
 mod playground;
 
-fn main() {
+#[tokio::main]
+async fn main() {
     match cli::get_command() {
         Ok(command) => command.run(),
         Err(error) => println!("\n{}\n", error),
