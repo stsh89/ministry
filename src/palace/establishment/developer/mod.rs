@@ -22,9 +22,9 @@ pub async fn read_zen_wisdom(
 ) -> Result<read_zen_wisdom::Inscription, read_zen_wisdom::ReadZenWisdomError> {
     use read_zen_wisdom::*;
 
-    let github = ZenWisdom::new(ZenWisdomAssistant::new());
+    let zen_wisdom = ZenWisdom::new(ZenWisdomAssistant::new());
 
-    github.read_zen().await
+    zen_wisdom.read_zen().await
 }
 
 pub fn list_code_experiment_names() -> Vec<String> {
