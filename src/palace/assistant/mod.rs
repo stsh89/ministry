@@ -1,4 +1,5 @@
 //! Place for various implementations.
+//!
 //! Generally, this module will be called 'client'.
 
 mod laboratory_manager;

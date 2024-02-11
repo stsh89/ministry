@@ -44,7 +44,7 @@ pub fn find_code_experiment_by_id(
 ) -> Result<fn() -> (), find_experimental_code::SearchError> {
     use find_experimental_code::*;
 
-    let catalogoue = CodeExperimentsCatalogue::new();
+    let catalogue = CodeExperimentsCatalogue::new();
 
-    catalogoue.find_code(experiment_name)
+    catalogue.find_code(experiment_name)
 }
