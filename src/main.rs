@@ -1,17 +1,12 @@
-//! # A unified Rust platform for a wide variety of functionalities
-//!
-//! A list of the current features:
-//! - Custom playgrounds
+//! A unified Rust platform for a wide variety of functionalities
 
 mod cli;
 mod github;
-mod log_server;
-mod playground;
+mod palace;
 
 #[tokio::main]
 async fn main() {
-    match cli::get_command() {
-        Ok(command) => command.run(),
-        Err(error) => println!("\n{}\n", error),
-    }
+    if let Err(error) = cli::run().await {
+        println!("{}", error.description);
+    };
 }

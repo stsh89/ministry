@@ -1,107 +1,75 @@
-//! # Command line interface
+use clap::{Arg, Command};
 
-mod clap_integration;
-mod error;
+use crate::palace::establishment;
 
-use crate::{github, log_server, playground};
-use error::CliError;
-
-pub enum CliCommand {
-    PlaygroundListCommand,
-    PlaygroundRunCommand { name: Playground },
-    LogServer,
-    GithubZenCommand,
+pub struct CliError {
+    pub description: String,
 }
 
-pub enum Playground {
-    BooksPlayground,
-}
+pub async fn run() -> Result<(), CliError> {
+    let command = Command::new("ministry")
+        .about("")
+        .subcommand(
+            Command::new("playground")
+                .subcommand(Command::new("run").arg(Arg::new("name").required(true)))
+                .subcommand(Command::new("list"))
+                .subcommand_required(true),
+        )
+        .subcommand(
+            Command::new("siesta")
+                .subcommand(Command::new("read_zen"))
+                .subcommand_required(true),
+        )
+        .subcommand_required(true);
 
-impl From<Playground> for String {
-    fn from(value: Playground) -> Self {
-        use Playground::*;
+    let matches = command.get_matches();
 
-        match value {
-            BooksPlayground => "books",
-        }
-        .to_string()
-    }
-}
+    match matches.subcommand() {
+        Some(("playground", arg_matches)) => match arg_matches.subcommand() {
+            Some(("run", arg_matches)) => {
+                let name = arg_matches
+                    .get_one::<String>("name")
+                    .cloned()
+                    .unwrap_or_default();
 
-impl TryFrom<String> for Playground {
-    type Error = CliError;
+                let experiment_name = match name.as_str() {
+                    "book" => establishment::developer::ExperimentName::Book,
+                    name => {
+                        return Err(CliError {
+                            description: format!("Playground `{name}` not found."),
+                        })
+                    }
+                };
 
-    fn try_from(value: String) -> Result<Self, Self::Error> {
-        use Playground::*;
+                establishment::developer::run_code_experiment(
+                    establishment::developer::CodeExperimentParameters { experiment_name },
+                );
+            }
+            Some(("list", _arg_matches)) => {
+                let experiment_names = establishment::developer::list_code_experiment_names();
 
-        let playground = match value.as_str() {
-            "books" => BooksPlayground,
-            name => return Err(CliError::playground_not_found(name)),
-        };
+                experiment_names
+                    .iter()
+                    .for_each(|name| println!("{}", name));
+            }
+            _ => unimplemented!(),
+        },
+        Some(("siesta", arg_matches)) => match arg_matches.subcommand() {
+            Some(("read_zen", _arg_matches)) => {
+                let result = establishment::developer::read_zen_wisdom().await;
 
-        Ok(playground)
-    }
-}
+                let Ok(inscription) = result else {
+                    return Err(CliError {
+                        description: "Error while reading zen wisdom".to_string(),
+                    });
+                };
 
-impl CliCommand {
-    pub fn run(&self) {
-        use CliCommand::*;
+                println!("{}", inscription.text);
+            }
+            _ => unimplemented!(),
+        },
+        _ => unimplemented!(),
+    };
 
-        match &self {
-            PlaygroundListCommand => list_playgrounds(),
-            PlaygroundRunCommand { name } => run_playground(name),
-            LogServer => log_server(),
-            GithubZenCommand => todo!("fix async issues"),
-        }
-    }
-
-    fn log_server_command() -> Self {
-        CliCommand::LogServer
-    }
-
-    fn playground_list_command() -> Self {
-        CliCommand::PlaygroundListCommand
-    }
-
-    fn playground_run_command(name: &str) -> Result<Self, CliError> {
-        let name = name.to_string().try_into()?;
-
-        Ok(CliCommand::PlaygroundRunCommand { name })
-    }
-
-    fn github_zen_command() -> Self {
-        CliCommand::GithubZenCommand
-    }
-}
-
-pub fn get_command() -> Result<CliCommand, CliError> {
-    clap_integration::get_command()
-}
-
-fn run_playground(name: &Playground) {
-    use Playground::*;
-
-    match name {
-        BooksPlayground => playground::books::example(),
-    }
-}
-
-fn list_playgrounds() {
-    use Playground::*;
-
-    let playgrounds: Vec<String> = vec![BooksPlayground.into()];
-
-    println!("{:?}", playgrounds);
-}
-
-fn log_server() {
-    log_server::run()
-}
-
-async fn fetch_github_zen() {
-    let result = github::zen::fetch().await;
-
-    if let Err(github_error) = result {
-        println!("{}", github_error.description);
-    }
+    Ok(())
 }
