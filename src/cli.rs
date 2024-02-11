@@ -32,31 +32,22 @@ pub async fn run() -> Result<(), CliError> {
                     .cloned()
                     .unwrap_or_default();
 
-                let experiment_name = match name.as_str() {
-                    "book" => establishment::developer::ExperimentName::Book,
-                    name => {
-                        return Err(CliError {
-                            description: format!("Playground `{name}` not found."),
-                        })
-                    }
-                };
-
-                establishment::developer::run_code_experiment(
-                    establishment::developer::CodeExperimentParameters { experiment_name },
-                );
+                establishment::developer::run_code_experiment(&name).map_err(|err| CliError {
+                    description: err.description,
+                })?;
             }
             Some(("list", _arg_matches)) => {
-                let experiment_names = establishment::developer::list_code_experiment_names();
+                let code_experiments = establishment::developer::list_code_experiments();
 
-                experiment_names
+                code_experiments
                     .iter()
-                    .for_each(|name| println!("{}", name));
+                    .for_each(|(name, _)| println!("{}", name));
             }
             _ => unimplemented!(),
         },
         Some(("siesta", arg_matches)) => match arg_matches.subcommand() {
             Some(("read_zen", _arg_matches)) => {
-                let result = establishment::developer::read_zen_wisdom().await;
+                let result = establishment::developer::show_zen_quote().await;
 
                 let Ok(inscription) = result else {
                     return Err(CliError {

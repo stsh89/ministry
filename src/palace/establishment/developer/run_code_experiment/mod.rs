@@ -1,31 +1,23 @@
-mod experiment;
+use super::find_code_experiment_by_id;
 
-pub struct CodeExperiment {
-    parameters: Parameters,
+pub struct Laboratory;
+
+pub struct InvocationError {
+    pub description: String,
 }
 
-pub struct Parameters {
-    pub experiment_name: ExperimentName,
-}
-
-pub enum ExperimentName {
-    Book,
-}
-
-impl CodeExperiment {
-    pub fn new(parameters: Parameters) -> Self {
-        Self { parameters }
+impl Laboratory {
+    pub fn new() -> Self {
+        Self {}
     }
 
-    pub fn run(&self) {
-        use ExperimentName::*;
+    pub fn run_experiment(&self, name: &str) -> Result<(), InvocationError> {
+        let experiment = find_code_experiment_by_id(name).map_err(|err| InvocationError {
+            description: err.description,
+        })?;
 
-        match self.parameters.experiment_name {
-            Book => run_books_experiment(),
-        }
+        experiment();
+
+        Ok(())
     }
-}
-
-fn run_books_experiment() {
-    experiment::book::example()
 }

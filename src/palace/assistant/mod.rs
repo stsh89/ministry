@@ -1,6 +1,8 @@
 //! Place for various implementations.
 //! Generally, this module will be called 'client'.
 
-mod zen_wisdom_assistant;
+mod laboratory_manager;
+mod psychologist;
 
-pub use zen_wisdom_assistant::ZenWisdomAssistant;
+pub use laboratory_manager::LaboratoryManager;
+pub use psychologist::Psychologist;

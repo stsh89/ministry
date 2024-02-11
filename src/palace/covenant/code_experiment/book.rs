@@ -8,7 +8,7 @@ struct Author {
     books: Vec<Book>,
 }
 
-pub fn example() {
+pub fn simulate_book_to_author_relationship() {
     let author = Author {
         first_name: "Gabriel".to_string(),
         last_name: "Garcia Marquez".to_string(),

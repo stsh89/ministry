@@ -1,15 +1,15 @@
-pub struct ZenWisdom<T>
+pub struct ZenMaster<T>
 where
-    T: ReadZenWisdom,
+    T: SayZenQuote,
 {
     assistant: T,
 }
 
-pub trait ReadZenWisdom {
-    async fn read_zen_wisdom(&self) -> Result<String, ReadZenWisdomError>;
+pub trait SayZenQuote {
+    async fn say_zen_quote(&self) -> Result<String, ReadZenWisdomError>;
 }
 
-pub struct Inscription {
+pub struct Quote {
     pub text: String,
 }
 
@@ -17,17 +17,17 @@ pub struct ReadZenWisdomError {
     pub description: String,
 }
 
-impl<T> ZenWisdom<T>
+impl<T> ZenMaster<T>
 where
-    T: ReadZenWisdom,
+    T: SayZenQuote,
 {
-    pub fn new(pupil: T) -> Self {
-        ZenWisdom { assistant: pupil }
+    pub fn new(assistant: T) -> Self {
+        ZenMaster { assistant }
     }
 
-    pub async fn read_zen(&self) -> Result<Inscription, ReadZenWisdomError> {
-        let text = self.assistant.read_zen_wisdom().await?;
+    pub async fn show_zen_quote(&self) -> Result<Quote, ReadZenWisdomError> {
+        let text = self.assistant.say_zen_quote().await?;
 
-        Ok(Inscription { text })
+        Ok(Quote { text })
     }
 }
