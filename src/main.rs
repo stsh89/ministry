@@ -7,6 +7,6 @@ mod palace;
 #[tokio::main]
 async fn main() {
     if let Err(error) = cli::run().await {
-        println!("{}", error.description);
+        println!("ERROR. {}", error.description);
     };
 }

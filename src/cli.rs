@@ -20,6 +20,9 @@ pub async fn run() -> Result<(), CliError> {
                 .subcommand(Command::new("read_zen"))
                 .subcommand_required(true),
         )
+        .subcommand(Command::new("notebook").subcommand(
+            Command::new("write").arg(Arg::new("thought").long("thought").required(true)),
+        ))
         .subcommand_required(true);
 
     let matches = command.get_matches();
@@ -56,6 +59,26 @@ pub async fn run() -> Result<(), CliError> {
                 };
 
                 println!("{}", inscription.text);
+            }
+            _ => unimplemented!(),
+        },
+        Some(("notebook", arg_matches)) => match arg_matches.subcommand() {
+            Some(("write", arg_matches)) => {
+                let thought = arg_matches
+                    .get_one::<String>("thought")
+                    .cloned()
+                    .unwrap_or_default();
+
+                let result = establishment::student::note_new_idea(&thought);
+
+                match result {
+                    Ok(idea) => println!("{}", idea.thought()),
+                    Err(error) => {
+                        return Err(CliError {
+                            description: error.to_string(),
+                        })
+                    }
+                };
             }
             _ => unimplemented!(),
         },

@@ -8,5 +8,6 @@ edition = "2021"
 [dependencies]
 clap = { version = "4.4.18", features = ["string"] }
 reqwest = { version = "0.11" }
+thiserror = "1.0.57"
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 uuid = { version = "1.7.0", features = ["v4"] }

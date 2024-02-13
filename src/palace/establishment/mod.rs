@@ -3,3 +3,4 @@
 //! More generally, this module can be called `use_case'.
 
 pub mod developer;
+pub mod student;
