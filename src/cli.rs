@@ -1,14 +1,50 @@
+use crate::{
+    datastax::{Datastax, DatastaxConfig},
+    palace::{
+        assistant::Secretary,
+        establishment::{self, student::NewIdeaParameters},
+    },
+};
 use clap::{Arg, Command};
-
-use crate::palace::establishment;
+use serde::Deserialize;
+use std::fs;
 
 pub struct CliError {
     pub description: String,
 }
 
+#[derive(Deserialize)]
+struct CliConfig {
+    datastax: CliDatastaxConfig,
+}
+
+#[derive(Deserialize)]
+struct CliDatastaxConfig {
+    database_id: String,
+    region: String,
+    keyspace: String,
+    application_token: String,
+}
+
+impl CliConfig {
+    fn datastax(&self) -> DatastaxConfig {
+        DatastaxConfig {
+            database_id: self.datastax.database_id.to_string(),
+            database_region: self.datastax.region.to_string(),
+            database_keyspace: self.datastax.keyspace.to_string(),
+            database_application_token: self.datastax.application_token.to_string(),
+        }
+    }
+}
+
 pub async fn run() -> Result<(), CliError> {
     let command = Command::new("ministry")
         .about("")
+        .arg(
+            Arg::new("config")
+                .long("config")
+                .default_value("config.json"),
+        )
         .subcommand(
             Command::new("playground")
                 .subcommand(Command::new("run").arg(Arg::new("name").required(true)))
@@ -26,6 +62,10 @@ pub async fn run() -> Result<(), CliError> {
         .subcommand_required(true);
 
     let matches = command.get_matches();
+    let config_path = matches
+        .get_one::<String>("config")
+        .cloned()
+        .unwrap_or_default();
 
     match matches.subcommand() {
         Some(("playground", arg_matches)) => match arg_matches.subcommand() {
@@ -69,7 +109,24 @@ pub async fn run() -> Result<(), CliError> {
                     .cloned()
                     .unwrap_or_default();
 
-                let result = establishment::student::note_new_idea(&thought);
+                let config_string = fs::read_to_string(config_path).map_err(|err| CliError {
+                    description: err.to_string(),
+                })?;
+                let config: CliConfig =
+                    serde_json::from_str(&config_string).map_err(|err| CliError {
+                        description: err.to_string(),
+                    })?;
+
+                let provider = Datastax::new(config.datastax()).map_err(|err| CliError {
+                    description: err.to_string(),
+                })?;
+                let secretary = Secretary::new(provider);
+
+                let result = establishment::student::note_new_idea(NewIdeaParameters {
+                    notebook: secretary,
+                    thought: &thought,
+                })
+                .await;
 
                 match result {
                     Ok(idea) => println!("{}", idea.thought()),

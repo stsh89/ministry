@@ -1,0 +1,8 @@
+{
+  "datastax": {
+    "database_id": "",
+    "region": "",
+    "keyspace": "",
+    "application_token": ""
+  }
+}

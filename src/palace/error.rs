@@ -2,14 +2,21 @@
 pub enum MinistryError {
     #[error("Covenant: {covenant}. Violation: {violation}")]
     ViolatedCovenant { covenant: String, violation: String },
+
+    #[error("{0}")]
+    InternalError(String),
 }
 
 impl MinistryError {
     pub fn covenant_violation(covenant: impl ToString, violation: impl ToString) -> Self {
-        MinistryError::ViolatedCovenant {
+        Self::ViolatedCovenant {
             covenant: covenant.to_string(),
             violation: violation.to_string(),
         }
+    }
+
+    pub fn internal_error(description: &str) -> Self {
+        Self::InternalError(description.to_string())
     }
 }
 
