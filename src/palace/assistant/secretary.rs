@@ -1,10 +1,15 @@
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
+use serde_json::json;
 use uuid::Uuid;
 
 use crate::{
-    datastax::Datastax,
-    palace::{covenant::Idea, establishment::student::WriteIdea, MinistryError},
+    datastax::{Datastax, SearchParameters},
+    palace::{
+        covenant::Idea,
+        establishment::student::{ListStudentIdeas, WriteIdea},
+        MinistryError,
+    },
 };
 
 pub struct Secretary {
@@ -47,17 +52,52 @@ impl WriteIdea for Secretary {
     }
 }
 
+impl ListStudentIdeas for Secretary {
+    async fn list_student_ideas(&self, student: &str) -> Result<Vec<Idea>, MinistryError> {
+        let raw_response = self
+            .provider
+            .search(
+                "ideas",
+                &SearchParameters {
+                    r#where: &json!({"student": {"$eq": student}}).to_string(),
+                },
+            )
+            .await
+            .map_err(|err| MinistryError::internal_error(&err.to_string()))?;
+
+        let response: ReadResponse = serde_json::from_str(&raw_response)
+            .map_err(|err| MinistryError::internal_error(&err.to_string()))?;
+
+        let ideas = response
+            .data
+            .into_iter()
+            .map(|value| value.try_into())
+            .collect::<Result<Vec<Idea>, MinistryError>>()?;
+
+        Ok(ideas)
+    }
+}
+
 #[derive(Deserialize, Serialize, Debug)]
 struct NotebookIdea {
     id: String,
+    student: String,
     thought: String,
-    inserted_at: String,
+    recording_time: String,
+}
+
+impl TryFrom<NotebookIdea> for Idea {
+    type Error = MinistryError;
+
+    fn try_from(value: NotebookIdea) -> Result<Self, Self::Error> {
+        Idea::new(&value.thought, &value.student)
+    }
 }
 
 #[derive(Deserialize)]
 struct ReadResponse {
     count: u64,
-    // data: Vec<NotebookIdea>,
+    data: Vec<NotebookIdea>,
 }
 
 impl NotebookIdea {
@@ -65,7 +105,8 @@ impl NotebookIdea {
         Self {
             id: Uuid::new_v4().to_string(),
             thought: idea.thought().to_string(),
-            inserted_at: Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Millis, true),
+            student: idea.student().to_string(),
+            recording_time: Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Millis, true),
         }
     }
 }

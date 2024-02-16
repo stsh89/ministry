@@ -2,19 +2,25 @@ use crate::palace::MinistryError;
 
 pub struct Idea {
     thought: String,
+    student: String,
 }
 
 impl Idea {
-    pub fn new(thought: &str) -> Result<Self, MinistryError> {
+    pub fn new(thought: &str, student: &str) -> Result<Self, MinistryError> {
         ThoughtValidator::new(thought).validate()?;
 
         Ok(Self {
             thought: thought.to_string(),
+            student: student.to_string(),
         })
     }
 
     pub fn thought(&self) -> &str {
         &self.thought
+    }
+
+    pub fn student(&self) -> &str {
+        &self.student
     }
 }
 

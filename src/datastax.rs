@@ -35,6 +35,10 @@ pub struct DatastaxConfig {
     pub database_application_token: String,
 }
 
+pub struct SearchParameters<'a> {
+    pub r#where: &'a str,
+}
+
 impl Datastax {
     pub fn new(config: DatastaxConfig) -> Result<Self, DatastaxError> {
         let builder = reqwest::Client::builder().default_headers(HeaderMap::from_iter(vec![
@@ -102,6 +106,28 @@ impl Datastax {
         self.client
             .post(url)
             .json(data)
+            .send()
+            .await
+            .map_err(|err| DatastaxError::internal_error(&err.to_string()))?
+            .text()
+            .await
+            .map_err(|err| DatastaxError::internal_error(&err.to_string()))
+    }
+
+    pub async fn search(
+        &self,
+        database_name: &str,
+        search_parameters: &SearchParameters<'_>,
+    ) -> Result<String, DatastaxError> {
+        let mut url = self.base_url.clone();
+
+        url.path_segments_mut()
+            .map_err(|_err| DatastaxError::malformed_url(""))?
+            .push(database_name);
+
+        self.client
+            .get(url)
+            .query(&[("where", search_parameters.r#where)])
             .send()
             .await
             .map_err(|err| DatastaxError::internal_error(&err.to_string()))?
