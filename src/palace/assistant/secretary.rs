@@ -24,7 +24,7 @@ impl Secretary {
 
 impl WriteIdea for Secretary {
     async fn write_idea(&self, idea: &Idea) -> Result<(), crate::palace::MinistryError> {
-        let notebook_idea = NotebookIdea::from_idea(idea);
+        let notebook_idea: NotebookIdea = idea.into();
 
         let raw_response = self
             .provider
@@ -150,12 +150,12 @@ struct ReadResponse {
     data: Vec<NotebookIdea>,
 }
 
-impl NotebookIdea {
-    fn from_idea(idea: &Idea) -> Self {
+impl From<&Idea> for NotebookIdea {
+    fn from(value: &Idea) -> Self {
         Self {
             id: Uuid::new_v4().to_string(),
-            thought: idea.thought().to_string(),
-            student: idea.student().to_string(),
+            thought: value.thought().to_string(),
+            student: value.student().to_string(),
             recording_time: Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Millis, true),
         }
     }
