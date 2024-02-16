@@ -2,9 +2,10 @@ use crate::{
     datastax::{Datastax, DatastaxConfig},
     palace::{
         assistant::Secretary,
+        covenant::Idea,
         establishment::{
             self,
-            student::{ListIdeas, NewIdeaParameters},
+            student::{DeleteIdeaParameters, ListIdeasParameters, NewIdeaParameters},
         },
     },
 };
@@ -69,6 +70,11 @@ pub async fn run() -> Result<(), CliError> {
                 )
                 .subcommand(
                     Command::new("list")
+                        .arg(Arg::new("student").long("student").default_value("stan")),
+                )
+                .subcommand(
+                    Command::new("delete")
+                        .arg(Arg::new("thought").long("thought").required(true))
                         .arg(Arg::new("student").long("student").default_value("stan")),
                 ),
         )
@@ -175,7 +181,7 @@ pub async fn run() -> Result<(), CliError> {
                 })?;
                 let secretary = Secretary::new(provider);
 
-                let result = establishment::student::list_ideas(ListIdeas {
+                let result = establishment::student::list_ideas(ListIdeasParameters {
                     secretary,
                     student: &student,
                 })
@@ -187,6 +193,47 @@ pub async fn run() -> Result<(), CliError> {
                             println!("{}", idea.thought());
                         }
                     }
+                    Err(error) => {
+                        return Err(CliError {
+                            description: error.to_string(),
+                        })
+                    }
+                };
+            }
+            Some(("delete", arg_matches)) => {
+                let thought = arg_matches
+                    .get_one::<String>("thought")
+                    .cloned()
+                    .unwrap_or_default();
+
+                let student = arg_matches
+                    .get_one::<String>("student")
+                    .cloned()
+                    .unwrap_or_default();
+
+                let config_string = fs::read_to_string(config_path).map_err(|err| CliError {
+                    description: err.to_string(),
+                })?;
+                let config: CliConfig =
+                    serde_json::from_str(&config_string).map_err(|err| CliError {
+                        description: err.to_string(),
+                    })?;
+
+                let provider = Datastax::new(config.datastax()).map_err(|err| CliError {
+                    description: err.to_string(),
+                })?;
+                let secretary = Secretary::new(provider);
+
+                let result = establishment::student::delete_idea(DeleteIdeaParameters {
+                    secretary,
+                    idea: &Idea::new(&thought, &student).map_err(|err| CliError {
+                        description: err.to_string(),
+                    })?,
+                })
+                .await;
+
+                match result {
+                    Ok(_idea) => println!("The thought has been successfully removed."),
                     Err(error) => {
                         return Err(CliError {
                             description: error.to_string(),

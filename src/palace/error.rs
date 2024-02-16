@@ -1,5 +1,8 @@
 #[derive(Debug, thiserror::Error)]
 pub enum MinistryError {
+    #[error("{0} not found")]
+    CovenantNotFound(String),
+
     #[error("Covenant: {covenant}. Violation: {violation}")]
     ViolatedCovenant { covenant: String, violation: String },
 
@@ -17,6 +20,10 @@ impl MinistryError {
 
     pub fn internal_error(description: &str) -> Self {
         Self::InternalError(description.to_string())
+    }
+
+    pub fn covenant_not_found(covenant: &str) -> Self {
+        Self::CovenantNotFound(covenant.to_string())
     }
 }
 

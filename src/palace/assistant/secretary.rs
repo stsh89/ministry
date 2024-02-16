@@ -7,7 +7,7 @@ use crate::{
     datastax::{Datastax, SearchParameters},
     palace::{
         covenant::Idea,
-        establishment::student::{ListStudentIdeas, WriteIdea},
+        establishment::student::{DeleteStudentIdea, ListStudentIdeas, WriteIdea},
         MinistryError,
     },
 };
@@ -75,6 +75,56 @@ impl ListStudentIdeas for Secretary {
             .collect::<Result<Vec<Idea>, MinistryError>>()?;
 
         Ok(ideas)
+    }
+}
+
+impl DeleteStudentIdea for Secretary {
+    async fn delete_student_idea(&self, idea: &Idea) -> Result<(), MinistryError> {
+        let notebook_ideas = self.list_notebook_ideas(idea.student()).await?;
+
+        let notebook_idea = notebook_ideas
+            .into_iter()
+            .find(|notebook_idea| notebook_idea.thought == idea.thought())
+            .ok_or(MinistryError::covenant_not_found("Idea"))?;
+
+        let result = self
+            .provider
+            .delete(
+                "ideas",
+                &[
+                    &notebook_idea.student,
+                    &notebook_idea.recording_time,
+                    &notebook_idea.id,
+                ],
+            )
+            .await
+            .map_err(|err| MinistryError::internal_error(&err.to_string()))?;
+
+        if result.is_empty() {
+            Ok(())
+        } else {
+            Err(MinistryError::internal_error(""))
+        }
+    }
+}
+
+impl Secretary {
+    async fn list_notebook_ideas(&self, student: &str) -> Result<Vec<NotebookIdea>, MinistryError> {
+        let raw_response = self
+            .provider
+            .search(
+                "ideas",
+                &SearchParameters {
+                    r#where: &json!({"student": {"$eq": student}}).to_string(),
+                },
+            )
+            .await
+            .map_err(|err| MinistryError::internal_error(&err.to_string()))?;
+
+        let response: ReadResponse = serde_json::from_str(&raw_response)
+            .map_err(|err| MinistryError::internal_error(&err.to_string()))?;
+
+        Ok(response.data)
     }
 }
 

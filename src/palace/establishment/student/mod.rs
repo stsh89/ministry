@@ -8,6 +8,10 @@ pub trait ListStudentIdeas {
     async fn list_student_ideas(&self, student: &str) -> Result<Vec<Idea>, MinistryError>;
 }
 
+pub trait DeleteStudentIdea {
+    async fn delete_student_idea(&self, idea: &Idea) -> Result<(), MinistryError>;
+}
+
 pub struct NewIdeaParameters<'a, T>
 where
     T: WriteIdea,
@@ -17,12 +21,20 @@ where
     pub student: &'a str,
 }
 
-pub struct ListIdeas<'a, T>
+pub struct ListIdeasParameters<'a, T>
 where
     T: ListStudentIdeas,
 {
     pub secretary: T,
     pub student: &'a str,
+}
+
+pub struct DeleteIdeaParameters<'a, T>
+where
+    T: DeleteStudentIdea,
+{
+    pub secretary: T,
+    pub idea: &'a Idea,
 }
 
 pub async fn note_new_idea<T>(parameters: NewIdeaParameters<'_, T>) -> Result<Idea, MinistryError>
@@ -36,12 +48,24 @@ where
     Ok(idea)
 }
 
-pub async fn list_ideas<T>(parameters: ListIdeas<'_, T>) -> Result<Vec<Idea>, MinistryError>
+pub async fn list_ideas<T>(
+    parameters: ListIdeasParameters<'_, T>,
+) -> Result<Vec<Idea>, MinistryError>
 where
     T: ListStudentIdeas,
 {
     parameters
         .secretary
         .list_student_ideas(parameters.student)
+        .await
+}
+
+pub async fn delete_idea<T>(parameters: DeleteIdeaParameters<'_, T>) -> Result<(), MinistryError>
+where
+    T: DeleteStudentIdea,
+{
+    parameters
+        .secretary
+        .delete_student_idea(parameters.idea)
         .await
 }

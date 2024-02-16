@@ -135,4 +135,31 @@ impl Datastax {
             .await
             .map_err(|err| DatastaxError::internal_error(&err.to_string()))
     }
+
+    pub async fn delete(
+        &self,
+        database_name: &str,
+        primary_key: &[&str],
+    ) -> Result<String, DatastaxError> {
+        let mut url = self.base_url.clone();
+
+        url.path_segments_mut()
+            .map_err(|_err| DatastaxError::malformed_url(""))?
+            .push(database_name);
+
+        for segment in primary_key {
+            url.path_segments_mut()
+                .map_err(|_err| DatastaxError::malformed_url(""))?
+                .push(segment);
+        }
+
+        self.client
+            .delete(url)
+            .send()
+            .await
+            .map_err(|err| DatastaxError::internal_error(&err.to_string()))?
+            .text()
+            .await
+            .map_err(|err| DatastaxError::internal_error(&err.to_string()))
+    }
 }
