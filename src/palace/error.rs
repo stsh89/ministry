@@ -6,7 +6,7 @@ pub enum MinistryError {
     #[error("Covenant: {covenant}. Violation: {violation}")]
     ViolatedCovenant { covenant: String, violation: String },
 
-    #[error("{0}")]
+    #[error("Internal error: {0}")]
     InternalError(String),
 }
 
@@ -32,7 +32,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_violated_covenantn() {
+    fn test_violated_covenant() {
         let error = MinistryError::covenant_violation(
             "Code experiment",
             "should not cause any harm to the environment.",
@@ -42,5 +42,12 @@ mod tests {
             error.to_string(),
             "Covenant: Code experiment. Violation: should not cause any harm to the environment."
         );
+    }
+
+    #[test]
+    fn test_internal_error() {
+        let error = MinistryError::internal_error("Something goes wrong");
+
+        assert_eq!(error.to_string(), "Internal error: Something goes wrong");
     }
 }
